@@ -8,10 +8,28 @@ from typing import Union, Callable, Optional
 from functools import wraps
 
 
+def call_history(method: Callable) -> Callable:
+    """stores the history of inputs and outputs for a
+    particular function"""
+    @wraps(method)
+    def wrapper(self, *args, **kwargs) -> Any:
+        """ adds input and output history to Redis
+        """
+        input_list_key = f"{method.__qualname__}:inputs"
+        output_list_key = f"{method.__qualname__}:outputs"
+        if isinstance(self._redis, redis.Redis):
+            self._redis.rpush(input_list_key, str(args))
+        output = method(self, *args, **kwargs)
+        if isinstance(self._redis, redis.Redis):
+            self._redis.rpush(output_list_key, output)
+        return output
+    return wrapper
+
+
 def count_calls(method: Callable) -> Callable:
     """ count the number of times a method is called"""
     @wraps(method)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, *args, **kwargs) -> Any:
         key = method.__qualname__
         self._redis.incr(key)
         return method(self, *args, **kwargs)
