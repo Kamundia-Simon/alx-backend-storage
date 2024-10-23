@@ -4,7 +4,7 @@ Create a Cache class for interacting with Redis.
 """
 import redis
 import uuid
-from typing import Union, Callable, Optional
+from typing import Union, Callable, Optional, Any
 from functools import wraps
 
 
