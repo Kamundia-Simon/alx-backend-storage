@@ -5,6 +5,17 @@ Create a Cache class for interacting with Redis.
 import redis
 import uuid
 from typing import Union, Callable, Optional
+from functools import wraps
+
+
+def count_calls(method: Callable) -> Callable:
+    """ count the number of times a method is called"""
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        key = method.__qualname__
+        self._redis.incr(key)
+        return method(self, *args, **kwargs)
+    return wrapper
 
 
 class Cache:
@@ -14,6 +25,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+        @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """Method: tore data in Redis and return a key for the stored"""
         key = str(uuid.uuid4())
