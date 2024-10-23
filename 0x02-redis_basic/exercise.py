@@ -9,6 +9,9 @@ from functools import wraps
 
 
 def replay(fn: callable) -> None:
+    """
+    display the history of calls of a particular function.
+    """
     if fn is None or not hasattr(fn, '__self__'):
         return
     redis_store = getattr(fn.__self__, '_redis', None)
@@ -30,7 +33,7 @@ def replay(fn: callable) -> None:
                 i.decode("utf-8"),
                 o,
                 ))
-            return None
+        return None
 
 
 def call_history(method: Callable) -> Callable:
@@ -55,6 +58,7 @@ def count_calls(method: Callable) -> Callable:
     """ count the number of times a method is called"""
     @wraps(method)
     def wrapper(self, *args, **kwargs) -> Any:
+        """adds input and output history"""
         if isinstance(self._redis, redis.Redis):
             self._redis.incr(method.__qualname__)
         return method(self, *args, **kwargs)
