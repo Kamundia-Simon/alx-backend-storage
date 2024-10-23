@@ -15,13 +15,13 @@ def call_history(method: Callable) -> Callable:
     def wrapper(self, *args, **kwargs) -> Any:
         """ adds input and output history to Redis
         """
-        input_list_key = f"{method.__qualname__}:inputs"
-        output_list_key = f"{method.__qualname__}:outputs"
+        input_key = f"{method.__qualname__}:inputs"
+        output_key = f"{method.__qualname__}:outputs"
         if isinstance(self._redis, redis.Redis):
             self._redis.rpush(input_list_key, str(args))
         output = method(self, *args, **kwargs)
         if isinstance(self._redis, redis.Redis):
-            self._redis.rpush(output_list_key, output)
+            self._redis.rpush(output_key, output)
         return output
     return wrapper
 
@@ -43,6 +43,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+        @call_history
         @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """Method: tore data in Redis and return a key for the stored"""
